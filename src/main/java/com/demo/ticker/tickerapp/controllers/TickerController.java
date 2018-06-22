@@ -33,7 +33,7 @@ public class TickerController {
     }
 
     @PostMapping(path="/submitPair", consumes = "application/json")
-    public ResponseEntity<String> submitPair(TransactionPair pair) {
+    public ResponseEntity<String> submitPair(@RequestBody TransactionPair pair) {
         tickerUpdateService.submitTask(pair);
         return new ResponseEntity<>("Submitted", HttpStatus.OK);
     }
