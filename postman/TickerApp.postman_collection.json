@@ -1,0 +1,106 @@
+{
+	"info": {
+		"_postman_id": "56f2dfc6-f4f9-458c-a6f0-97fc1aeab2f1",
+		"name": "TickerApp",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Submit Pair",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"buy\" : {\n\t\t\"curr\": \"XBT\",\n\t\t\"amount\": 2\n\t},\n\t\"sell\":\n\t{\n\t\t\"curr\": \"EUR\",\n\t\t\"amount\": 11000\n\t}\n\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/submitPair",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"submitPair"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "List tasks",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "http://localhost:8080/tasks",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tasks"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Cancel Task",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "text/plain"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "44d4868b-ee85-479b-a288-95c06ad5b638"
+				},
+				"url": {
+					"raw": "http://localhost:8080/cancelTask",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"cancelTask"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "List task",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "http://localhost:8080/task/98285794-7cf0-4f4e-afe7-beee89e02ea0",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"task",
+						"98285794-7cf0-4f4e-afe7-beee89e02ea0"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
