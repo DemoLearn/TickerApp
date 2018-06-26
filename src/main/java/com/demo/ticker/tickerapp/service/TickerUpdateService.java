@@ -1,17 +1,20 @@
 package com.demo.ticker.tickerapp.service;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
-import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.demo.ticker.tickerapp.entity.TransactionPair;
 import com.demo.ticker.tickerapp.tasks.BackgroundCheckTask;
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.JsonNode;
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.exceptions.UnirestException;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 /**
  * @author bhusu01
@@ -19,40 +22,56 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 @Service
 public class TickerUpdateService {
 
-    private static final String TICKER_ENDPOINT = "https://api.kraken.com/0/public/Ticker?pair=";
+    private static final Logger LOGGER = LoggerFactory.getLogger(TickerUpdateService.class);
 
     public String helloUniverse() {
         return "Hello Universe";
     }
 
     final ExecutorService executorService = Executors.newFixedThreadPool(10);
+    final Map<UUID, TaskWrapper> taskMap = new HashMap<>();
 
-    public String fetchTicker(String tick) {
-        try {
-            HttpResponse<JsonNode> response = Unirest.get(TICKER_ENDPOINT + tick).asJson();
-            JSONObject result = response.getBody().getObject().getJSONObject("result");
-            String internalTick = result.keys().next();
-            JSONObject tickQuote = result.getJSONObject(internalTick);
-            return tickQuote.getJSONArray("c").getString(0);
-        } catch (UnirestException e) {
-            return e.getMessage();
+    public UUID submitTask(TransactionPair pair) {
+        UUID taskId = UUID.randomUUID();
+        BackgroundCheckTask task = new BackgroundCheckTask(pair);
+        Future<?> taskHandle = executorService.submit(task);
+        TaskWrapper wrapper = new TaskWrapper(taskHandle, pair);
+        taskMap.put(taskId, wrapper);
+        return taskId;
+    }
+
+    public Map<UUID, TransactionPair> listRunningTasks(){
+        Map<UUID, TransactionPair> taskPairs = new HashMap<>();
+        for(UUID taskId: taskMap.keySet()) {
+            TaskWrapper wrapper = taskMap.get(taskId);
+            taskPairs.put(taskId, wrapper.pair);
         }
+        return taskPairs;
     }
 
-    public float fetchCurrentProfit(TransactionPair pair) {
-        float unitPrice = pair.fetchUnitPrice();
-        String tick = pair.fetchTick();
-        float currentPrice = Float.parseFloat(fetchTicker(tick));
-        float diff = currentPrice - unitPrice;
-        return pair.buyAmount() * diff;
-    }
-
-    public void submitTask(TransactionPair pair) {
-        BackgroundCheckTask task = new BackgroundCheckTask(pair, this);
-        executorService.submit(task);
+    public boolean stopTask(UUID taskId) {
+        TaskWrapper taskWrapper = taskMap.remove(taskId);
+        if(taskWrapper == null) {
+            throw new IllegalArgumentException("No task with Id " + taskId);
+        }
+        Future taskHandle = taskWrapper.taskHandle;
+        if(!taskHandle.isDone()) {
+            LOGGER.info("Cancelling task {}", taskId);
+            boolean status = taskHandle.cancel(true);
+            LOGGER.info("Task {} cancelled: {}", taskId, status);
+            return status;
+        }
+        throw new IllegalStateException("The task has already been stopped");
     }
 }
 
+@AllArgsConstructor
+@Getter
+class TaskWrapper {
+    final Future taskHandle;
+    final TransactionPair pair;
+
+}
 
 
 
