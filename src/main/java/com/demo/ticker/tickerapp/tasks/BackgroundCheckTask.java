@@ -2,11 +2,14 @@ package com.demo.ticker.tickerapp.tasks;
 
 import javax.validation.constraints.NotNull;
 
+import java.util.UUID;
+
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.demo.ticker.tickerapp.entity.TransactionPair;
+import com.demo.ticker.tickerapp.service.callback.ValueUpdate;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
@@ -22,10 +25,16 @@ public class BackgroundCheckTask implements Runnable {
     private static final String TICKER_ENDPOINT = "https://api.kraken.com/0/public/Ticker?pair=";
 
     private final TransactionPair pair;
+    private final UUID taskId;
+    private final ValueUpdate updateListener;
     private boolean canRun = true;
 
-    public BackgroundCheckTask(@NotNull TransactionPair pair) {
+    public BackgroundCheckTask(@NotNull TransactionPair pair,
+                               @NotNull UUID taskId,
+                               @NotNull ValueUpdate updateListener) {
         this.pair = pair;
+        this.taskId = taskId;
+        this.updateListener = updateListener;
     }
 
     @Override
@@ -34,6 +43,7 @@ public class BackgroundCheckTask implements Runnable {
             LOGGER.info("Starting task");
             while (canRun) {
                 float currentProfit = fetchCurrentProfit(pair);
+                updateListener.updateLatest(taskId, currentProfit);
                 LOGGER.info("Current profit is {}", currentProfit);
                 if(Thread.currentThread().isInterrupted()) {
                     canRun = false;

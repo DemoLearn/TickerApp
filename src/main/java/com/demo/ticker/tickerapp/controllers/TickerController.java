@@ -1,7 +1,6 @@
 package com.demo.ticker.tickerapp.controllers;
 
 import javax.validation.constraints.NotNull;
-import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -44,8 +44,13 @@ public class TickerController {
     }
 
     @GetMapping(path = "/tasks")
-    public ResponseEntity<Map<UUID, TransactionPair>> listTasks() {
+    public ResponseEntity listTasks() {
         return new ResponseEntity<>(tickerUpdateService.listRunningTasks(), HttpStatus.OK);
+    }
+
+    @GetMapping(path = "/task/{id}")
+    public ResponseEntity listTasks(@PathVariable("id") String id) {
+        return new ResponseEntity<>(tickerUpdateService.fetchTask(UUID.fromString(id)), HttpStatus.OK);
     }
 
     @PostMapping(path = "/cancelTask", consumes = "text/plain")
